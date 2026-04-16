@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zentro | Premium Secure Mail</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+    <div class="glow-blob blob-1"></div>
+    <div class="glow-blob blob-2"></div>
+    <div class="noise-overlay"></div>
+
+    <div id="toast" class="toast hidden"></div>
+    <div id="global-loader" class="screen-loader hidden">
+        <div class="spinner"></div>
+        <p id="loader-msg" class="loader-text text-muted mt-4">Securing...</p>
+    </div>
+
+    <div id="landing-screen" class="page active" style="overflow-y: auto; overflow-x: hidden;">
+        <nav class="top-nav flex-between">
+            <div class="nav-brand tracking-wide text-glow-brand">ZENTRO</div>
+            <button class="btn btn-secondary btn-sm pill-sm" onclick="app.navToAuth('signin')">Sign In</button>
+        </nav>
+
+        <main class="hero-section flex-center">
+            <div class="hero-content glass-panel-premium text-center fade-in-up">
+                <div class="badge mb-6">Military-Grade Encryption</div>
+                <h1 class="hero-title mb-6">Your privacy,<br><span class="text-gradient">reimagined.</span></h1>
+                <p class="hero-desc text-muted mx-auto mb-10">
+                    The next generation of secure communication. Sophisticated design engineered for uncompromising privacy.
+                </p>
+                <div class="hero-actions flex-center-row gap-4 justify-center">
+                    <button class="btn btn-primary btn-lg pill" onclick="app.navToAuth('signup')">Create Account</button>
+                    <button class="btn btn-glass btn-lg pill" onclick="app.navToAuth('signin')">Sign In</button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="landing-footer">
+            <div class="footer-content">
+                <div class="footer-top">
+                    <div class="footer-links">
+                        <a href="#" onclick="app.nav('status-screen'); return false;">System status</a>
+                        <a href="#" onclick="app.nav('report-abuse-screen'); return false;">Report abuse</a>
+                        <a href="#" onclick="app.nav('report-problem-screen'); return false;">Report a problem</a>
+                        <a href="#" onclick="app.nav('security-screen'); return false;">Report a security issue</a>
+                        <a href="#" onclick="app.nav('feature-request-screen'); return false;">Request a feature</a>
+                    </div>
+                    <div class="footer-lang">
+                        <button class="btn-lang">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            English
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="footer-divider"></div>
+                <div class="footer-bottom">
+                    <div class="footer-legal">
+                        <a href="#" onclick="app.nav('privacy-screen'); return false;">Privacy Policy</a>
+                        <a href="#" onclick="app.nav('terms-screen'); return false;">Terms & conditions</a>
+                        <a href="#" onclick="app.nav('transparency-screen'); return false;">Transparency report</a>
+                    </div>
+                    <div class="footer-copy">
+                        &copy; 2026 Zentro. All rights reserved.
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <div id="auth-screen" class="page hidden flex-center">
+        <button onclick="app.goBack()" class="back-btn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Back
+        </button>
+ 
+        <div class="auth-card glass-panel fade-in-scale">
+            <h2 id="auth-title" class="text-3xl font-medium mb-2 tracking-tight">Create Account</h2>
+            <p id="auth-sub" class="text-muted mb-8">Join the secure network.</p>
+
+            <form id="auth-form" onsubmit="app.handleAuth(event)">
+                <div class="input-group mb-4">
+                    <input type="email" id="auth-email" placeholder="Email (@zentro.mail)" required autocomplete="off">
+                </div>
+                
+                <div id="auth-phone-group" class="hidden mb-4">
+                    <div class="phone-input-wrapper">
+                       <div class="country-select" onclick="app.toggleCountryDropdown(event, 'auth-country-list')">
+                            <span id="auth-flag">🇦🇪</span> <span id="auth-code">+971</span>
+                        </div>
+                        <input type="tel" id="auth-phone" placeholder="50 123 4567" inputmode="numeric" class="premium-tel-input" autocomplete="off">
+                        <div class="country-dropdown hidden" id="auth-country-list">
+                            <div onclick="app.selectCountry('AE', 'auth')">🇦🇪 UAE (+971)</div>
+                            <div onclick="app.selectCountry('US', 'auth')">🇺🇸 USA (+1)</div>
+                            <div onclick="app.selectCountry('UK', 'auth')">🇬🇧 UK (+44)</div>
+                            <div onclick="app.selectCountry('IN', 'auth')">🇮🇳 India (+91)</div>
+                        </div>
+                    </div>
+                    <p id="auth-phone-error" class="text-danger text-sm mt-2 hidden"></p>
+                </div>
+
+                <div class="input-group mb-4">
+                    <input type="password" id="auth-password" placeholder="Password" required oninput="app.validatePasswordStrength(this.value, 'auth')" autocomplete="new-password">
+                    <div id="auth-pass-checklist" class="pass-checklist hidden mt-3">
+                        <div id="auth-rule-length" class="rule">8+ characters</div>
+                        <div id="auth-rule-upper" class="rule">Uppercase letter</div>
+                        <div id="auth-rule-lower" class="rule">Lowercase letter</div>
+                        <div id="auth-rule-number" class="rule">Number</div>
+                        <div id="auth-rule-special" class="rule">Special character</div>
+                        <div class="strength-meter mt-3"><div id="auth-strength-bar" class="strength-bar"></div></div>
+                    </div>
+                </div>
+  
+                <p id="auth-error" class="text-danger text-sm mb-4 hidden"></p>
+                <button type="submit" class="btn btn-primary w-full pill" id="auth-submit">Continue</button>
+            </form>
+
+            <div class="flex-center-row gap-4 my-6">
+                <div class="flex-1 border-t border-light"></div>
+                <span class="text-xs text-muted uppercase tracking-wide">Or secure with</span>
+                <div class="flex-1 border-t border-light"></div>
+            </div>
+
+            <button type="button" id="btn-google-login" class="btn btn-secondary w-full pill mb-2" onclick="app.handleGoogleAuth('login')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="mr-2"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.58c2.08-1.92 3.27-4.74 3.27-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.16v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.16C1.43 8.55 1 10.22 1 12s.43 3.45 1.16 4.93l3.68-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.16 7.07l3.68 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                Log in with Google
+            </button>
+            
+            <button type="button" id="btn-google-signup" class="btn btn-secondary w-full pill mb-2 hidden" onclick="app.handleGoogleAuth('signup')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="mr-2"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.58c2.08-1.92 3.27-4.74 3.27-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.16v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.16C1.43 8.55 1 10.22 1 12s.43 3.45 1.16 4.93l3.68-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.16 7.07l3.68 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                Sign up with Google
+            </button>
+
+            <div class="auth-footer mt-6 flex-between">
+                <button id="forgot-btn" class="text-btn text-sm" onclick="app.nav('forgot-screen')">Forgot password?</button>
+                <button id="toggle-auth-btn" class="text-btn text-sm text-primary font-medium" onclick="app.toggleAuthMode()">Sign In instead</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="google-login-error-screen" class="page hidden flex-center">
+        <div class="auth-card glass-panel text-center fade-in-scale">
+            <div class="mx-auto mb-6 text-danger" style="width: 64px; height: 64px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            </div>
+            <h2 class="text-2xl font-medium mb-2 tracking-tight">Access Denied</h2>
+            <p class="text-muted mb-8 leading-relaxed">This account is not registered. Please create an account to join the network.</p>
+            <button class="btn btn-primary w-full pill mb-4" onclick="app.navToAuth('signup')">Create Account</button>
+            <button class="text-btn text-sm mt-2" onclick="app.nav('landing-screen')">Return Home</button>
+        </div>
+    </div>
+
+    <div id="google-signup-step-screen" class="page hidden flex-center">
+        <div class="auth-card glass-panel text-center fade-in-scale">
+            <h2 class="text-2xl font-medium mb-2 tracking-tight">Create your Zentro email</h2>
+            <p class="text-muted mb-8 leading-relaxed">Choose your secure address for the network.</p>
+            <div class="input-group mb-6">
+                <input type="text" id="google-zentro-email" class="w-full" placeholder="username@zentro.mail">
+            </div>
+            <button class="btn btn-primary w-full pill" onclick="app.completeGoogleSignup()">Complete Registration</button>
+        </div>
+    </div>
+    
+    <div id="forgot-screen" class="page hidden flex-center">
+        <button onclick="app.nav('landing-screen')" class="back-btn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Back
+        </button>
+        <div class="glass-panel p-8 text-center" style="max-width: 440px; width: 100%;">
+            <div id="forgot-step-1">
+                <h2 class="text-2xl font-medium mb-2">Reset Password</h2>
+                <p class="text-muted mb-6">Enter your account email.</p>
+                <div class="input-group mb-4">
+                    <input type="email" id="forgot-email-input" class="w-full" placeholder="Email (@zentro.mail)">
+                </div>
+                <button class="btn btn-primary w-full pill" onclick="app.sendPasswordResetCode()">Send Code</button>
+            </div>
+            <div id="forgot-step-2" class="hidden">
+                <h2 class="text-2xl font-medium mb-2">Verification</h2>
+                <p class="text-muted mb-6">Enter the 6-digit code sent to your recovery method.</p>
+                <div class="otp-container mb-6" id="forgot-otp">
+                    <input type="text" maxlength="1" class="otp-input" inputmode="numeric"><input type="text" maxlength="1" class="otp-input" inputmode="numeric"><input type="text" maxlength="1" class="otp-input" inputmode="numeric"><input type="text" maxlength="1" class="otp-input" inputmode="numeric"><input type="text" maxlength="1" class="otp-input" inputmode="numeric"><input type="text" maxlength="1" class="otp-input" inputmode="numeric">
+                </div>
+                <button class="btn btn-primary w-full pill" onclick="app.verifyPasswordResetCode()">Verify</button>
+            </div>
+            <div id="forgot-step-3" class="hidden">
+                <h2 class="text-2xl font-medium mb-2">New Password</h2>
+                <p class="text-muted mb-6">Create a new encryption key.</p>
+                <div class="input-group mb-4">
+                    <input type="password" id="forgot-new-password" class="w-full" placeholder="New Password">
+                </div>
+                <button class="btn btn-primary w-full pill" onclick="app.completePasswordReset()">Reset Password</button>
+            </div>
+        </div>
+    </div>
+    <div id="dashboard-screen" class="page hidden dashboard-layout">
+        <aside class="sidebar glass-sidebar">
+            <div class="sidebar-top p-6">
+                <div class="nav-brand mb-8 text-glow-brand">ZENTRO</div>
+                <button class="btn btn-compose w-full" onclick="app.showView('view-compose')">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    <span>Compose</span>
+                </button>
+            </div>
+
+            <div class="sidebar-scrollable flex-1">
+                <p class="sidebar-label">Mailbox</p>
+                <nav class="sidebar-nav">
+                    <button class="nav-item active" onclick="app.showView('view-inbox')">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
+                        Inbox
+                    </button>
+                    <button class="nav-item" onclick="app.showView('view-starred')">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        Starred
+                    </button>
+                    <button class="nav-item" onclick="app.showView('view-sent')">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        Sent
+                    </button>
+                    <button class="nav-item" onclick="app.showView('view-drafts')">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Drafts
+                    </button>
+                    <button class="nav-item" onclick="app.showView('view-archive')">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+                        Archive
+                    </button>
+                    <button class="nav-item" onclick="app.showView('view-trash')">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        Trash
+                    </button>
+                </nav>
+                <p class="sidebar-label mt-6">System</p>
+                <nav class="sidebar-nav">
+                    <button class="nav-item" onclick="app.showView('view-settings')">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        Settings
+                    </button>
+                    <button class="nav-item" onclick="app.showView('view-support')">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                        Support
+                    </button>
+                </nav>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-profile-wrapper w-full">
+                    <div class="profile-pill flex-between cursor-pointer w-full" onclick="app.toggleProfile(event)">
+                        <div class="flex-center-row gap-3">
+                            <div class="avatar" id="sidebar-avatar">U</div>
+                            <div class="profile-info text-left">
+                                <p class="text-sm font-medium" id="sidebar-email" style="max-width:130px; overflow:hidden; text-overflow:ellipsis;"></p>
+                            </div>
+                        </div>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                    </div>
+                    
+                    <div class="profile-dropdown hidden" id="profile-dropdown">
+                        <button onclick="app.showView('view-settings')">Account Settings</button>
+                        <button onclick="app.openManageAccounts()">Manage Accounts</button>
+                        <div class="divider" style="height:1px; background:var(--border-light); margin:0.5rem 0;"></div>
+                        <button class="text-danger" onclick="app.logoutCurrent()">Sign Out</button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar flex-between px-8 py-6 border-b border-light">
+                <h2 class="text-3xl font-medium tracking-tight" id="view-title">Inbox</h2>
+            </header>
+            <div class="view-container">
+                
+                <div id="view-inbox" class="dashboard-view"><div id="inbox-list" class="mail-list px-8 py-4"></div></div>
+                <div id="view-starred" class="dashboard-view hidden"><div id="starred-list" class="mail-list px-8 py-4"></div></div>
+                <div id="view-sent" class="dashboard-view hidden"><div id="sent-list" class="mail-list px-8 py-4"></div></div>
+                <div id="view-drafts" class="dashboard-view hidden"><div id="drafts-list" class="mail-list px-8 py-4"></div></div>
+                <div id="view-archive" class="dashboard-view hidden"><div id="archive-list" class="mail-list px-8 py-4"></div></div>
+                <div id="view-trash" class="dashboard-view hidden"><div id="trash-list" class="mail-list px-8 py-4"></div></div>
+
+                <div id="view-empty" class="dashboard-view hidden">
+                    <div class="empty-state text-center text-muted">
+                        <svg class="mx-auto mb-4 opacity-50" viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        <p>No messages here.</p>
+                    </div>
+                </div>
+
+                <div id="view-read" class="dashboard-view hidden px-8 py-4">
+                    <button class="text-btn mb-6 flex-center-row gap-2" onclick="app.closeReadView()">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                        Back
+                    </button>
+                    <div class="read-card glass-panel p-8">
+                        <div class="flex-between mb-4">
+                            <h2 id="read-subject" class="text-3xl font-medium tracking-tight"></h2>
+                            <button id="read-star-btn" class="star-btn large" onclick="app.toggleReadStar()">
+                                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            </button>
+                        </div>
+                        <p id="read-sender" class="text-muted text-sm"></p>
+                        <p id="read-date" class="text-muted text-sm border-b border-light pb-4 mb-6"></p>
+                        <div id="read-content" class="mail-body-text text-primary leading-relaxed" style="white-space: pre-wrap; font-size: 1.05rem;"></div>
+                        
+                        <div class="message-actions border-t border-light pt-6 mt-8">
+                            <button class="btn btn-secondary pill btn-reply" onclick="app.replyToCurrent()">Reply</button>
+                            <button class="btn btn-secondary pill btn-archive" id="btn-read-archive" onclick="app.archiveCurrent()">Archive</button>
+                            <button class="btn btn-secondary pill btn-archive hidden" id="btn-read-unarchive" onclick="app.unarchiveCurrent()">Unarchive</button>
+                            <button class="btn btn-danger pill btn-delete" onclick="app.trashCurrent()">Delete</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-settings" class="dashboard-view hidden px-8 py-6">
+                    <div class="settings-grid mx-auto" style="max-width: 680px;">
+                        <h3 class="text-sm font-medium mb-4 text-muted uppercase tracking-wide">Profile</h3>
+                        <div class="glass-panel p-6 mb-8">
+                            <div class="flex-between border-b border-light pb-4 mb-4">
+                                <div class="setting-info">
+                                    <h4 class="font-medium mb-1">Connected Providers</h4>
+                                    <p class="text-sm text-muted" id="set-provider">Google: Not Connected</p>
+                                </div>
+                                <div id="set-provider-action"></div>
+                            </div>
+
+                            <div class="flex-between border-b border-light pb-4 mb-4">
+                                <div class="setting-info">
+                                    <h4 class="font-medium mb-1">Email Address</h4>
+                                    <p class="text-sm text-muted" id="set-email"></p>
+                                </div>
+                                <span class="badge text-sm">Read-only</span>
+                            </div>
+                            <div class="flex-between">
+                                <div class="setting-info">
+                                    <h4 class="font-medium mb-1">Phone Number</h4>
+                                    <p class="text-sm text-muted" id="set-phone"></p>
+                                </div>
+                                <button class="btn btn-secondary btn-sm pill" onclick="app.openAddPhoneModal()">Update</button>
+                            </div>
+                        </div>
+
+                        <h3 class="text-sm font-medium mb-4 text-muted uppercase tracking-wide">Security</h3>
+                        <div class="glass-panel p-6 mb-8">
+                            <div class="flex-between border-b border-light pb-4 mb-4">
+                                <div class="setting-info">
+                                    <h4 class="font-medium mb-1">Two-Factor Authentication</h4>
+                                    <p class="text-sm text-muted">Request physical key or app 2FA access.</p>
+                                </div>
+                                <button class="btn btn-secondary btn-sm pill" onclick="app.open2FARequest()">Request Access</button>
+                            </div>
+                            <div class="flex-between border-b border-light pb-4 mb-4">
+                                <div class="setting-info">
+                                    <h4 class="font-medium mb-1">Recovery Email</h4>
+                                    <p class="text-sm text-muted" id="set-recovery"></p>
+                                </div>
+                                <div class="flex-end gap-2">
+                                    <button class="btn btn-danger btn-sm pill hidden" id="btn-remove-rec" onclick="app.initiateRecoveryEmailChange('remove')">Remove</button>
+                                    <button class="btn btn-secondary btn-sm pill" id="btn-update-rec" onclick="app.initiateRecoveryEmailChange('update')">Add / Update</button>
+                                </div>
+                            </div>
+                            <div class="flex-between">
+                                <div class="setting-info">
+                                    <h4 class="font-medium mb-1">Change Password</h4>
+                                    <p class="text-sm text-muted">Update your encryption key.</p>
+                                </div>
+                                <button class="btn btn-secondary btn-sm pill" onclick="app.openChangePasswordModal()">Update</button>
+                            </div>
+                        </div>
+
+                        <h3 class="text-sm font-medium mb-4 text-muted uppercase tracking-wide">Account</h3>
+                        <div class="glass-panel p-6">
+                            <div class="flex-between border-b border-light pb-4 mb-4">
+                                <h4 class="font-medium mb-1">Switch Account</h4>
+                                <button class="btn btn-secondary btn-sm pill" onclick="app.openSwitchAccount()">Switch</button>
+                            </div>
+                            <div class="flex-between">
+                                <h4 class="font-medium text-danger mb-1">Sign Out</h4>
+                                <button class="btn btn-danger btn-sm pill" onclick="app.logoutCurrent()">Logout</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="view-2fa-request" class="dashboard-view hidden px-8 py-6">
+                    <div class="settings-panel mx-auto" style="max-width: 600px;">
+                        <button class="text-btn mb-6 flex-center-row gap-2" onclick="app.showView('view-settings')">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                            Back to Settings
+                        </button>
+                        <h3 class="text-xl font-medium mb-6 pb-2 border-b border-light">Request 2FA Access</h3>
+                        <div class="glass-panel p-8">
+                            <div class="input-group mb-4">
+                                <label class="text-sm text-muted mb-2 block">Email Address</label>
+                                <input type="text" id="req-email" disabled class="disabled-input">
+                            </div>
+                            <div class="input-group mb-4">
+                                <label class="text-sm text-muted mb-2 block">Request Type</label>
+                                <input type="text" value="Enable Two-Factor Authentication" disabled class="disabled-input">
+                            </div>
+                            <div class="input-group mb-8">
+                                <label class="text-sm text-muted mb-2 block">Date</label>
+                                <input type="text" id="req-date" disabled class="disabled-input">
+                            </div>
+                            <p id="req-2fa-error" class="text-danger text-sm mb-4 hidden"></p>
+                            <button class="btn btn-primary pill w-full" onclick="app.submit2FARequest(event)">Submit Request</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="view-support" class="dashboard-view hidden px-8 py-6">
+                    <div class="settings-panel mx-auto" style="max-width: 600px;">
+                        <h3 class="text-xl font-medium mb-6 pb-2 border-b border-light">Contact Support</h3>
+                        <div id="internal-form-box">
+                            <p class="mb-6 text-muted">Secure, encrypted transmission to our team.</p>
+                            <div class="input-group mb-4">
+                                <select id="internal-issue-type" class="premium-select w-full" onchange="app.handleIssueChange(this, 'internal')" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); color: var(--text-primary); padding: 1.1rem 1.25rem; font-size: 1rem; border-radius: var(--radius-sm); outline: none;">
+                                    <option value="" disabled selected>Select an option...</option>
+                                    <option value="abuse">Report abuse</option>
+                                    <option value="problem">Report a problem</option>
+                                    <option value="security">Report a security issue</option>
+                                    <option value="feature">Request a feature</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div id="internal-other-group" class="input-group smooth-reveal hidden mb-4">
+                                <input type="text" id="internal-other-text" class="w-full" placeholder="Briefly describe the topic...">
+                            </div>
+                            <div class="input-group mb-4">
+                                <textarea id="support-msg" rows="6" class="w-full" placeholder="Describe your issue in detail..."></textarea>
+                            </div>
+                            <button class="btn btn-primary pill w-full" onclick="app.submitSupport()">Send Request</button>
+                        </div>
+
+                        <div id="internal-success-box" class="premium-success-box hidden py-10">
+                            <div class="success-icon-wrapper stagger-1">
+                                <div class="pulse-ring"></div>
+                                <div class="glow-check-circle" style="margin: 0; width: 64px; height: 64px;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                </div>
+                            </div>
+                            <h2 class="text-2xl font-medium mb-2 stagger-2 text-gradient-success tracking-tight">Request Submitted</h2>
+                            <p class="text-muted mb-8 stagger-3">Your request has been sent successfully. Our team will review it shortly.</p>
+                            <button id="internal-view-ticket-btn" class="btn btn-primary pill w-full stagger-4">Track Ticket Status</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-2fa-success" class="dashboard-view hidden success-screen px-8 py-6">
+                  <div class="success-card glass-panel p-8 text-center mx-auto" style="max-width: 400px;">
+                    <div class="glow-check-circle mx-auto mb-4" style="width: 60px; height: 60px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <h2 class="success-title text-2xl font-medium mb-2">Request Submitted</h2>
+                    <p class="success-subtitle text-muted mb-6">Your 2FA access request has been securely logged.</p>
+                    <div class="success-badge mb-6 text-sm">⏱ Support will contact you shortly</div>
+                    <button class="btn btn-primary pill w-full success-btn" onclick="app.showView('view-settings')">Return to Settings</button>
+                  </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="compose-modal" class="modal-overlay hidden flex-center" style="position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000;">
+        <div class="modal-card glass-panel fade-in-scale p-8" style="max-width: 600px; width: 100%;">
+            <div class="modal-header flex-between mb-6">
+                <h3 class="text-xl font-medium">New Message</h3>
+                <button class="btn-close text-btn" onclick="app.closeCompose()"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group mb-4 compose-to-wrapper" style="position: relative;">
+                    <input type="email" id="compose-to" class="w-full" placeholder="To (Recipient Email):" oninput="app.onToInput(this.value); app.autoSaveDraft()" autocomplete="off">
+                    <div id="email-suggestions" class="suggestions-dropdown hidden"></div>
+                </div>
+                <div class="input-group mb-4">
+                    <input type="text" id="compose-subject" class="w-full" placeholder="Subject:" oninput="app.autoSaveDraft()">
+                </div>
+                <div class="input-group mb-4">
+                    <textarea id="compose-body" class="w-full" rows="8" placeholder="Write your message..." oninput="app.autoSaveDraft()"></textarea>
+                </div>
+                <p id="compose-error" class="text-danger text-sm mb-4 hidden"></p>
+            </div>
+            <div class="modal-footer flex-between mt-2">
+                <span id="draft-status" class="text-xs text-muted"></span>
+                <button class="btn btn-primary pill" id="btn-send-msg" onclick="app.sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="switch-account-modal" class="modal-overlay hidden flex-center" style="position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000;">
+        <div class="glass-panel p-6 text-center" style="max-width: 350px; width: 100%;">
+            <h3 class="text-xl mb-4">Switch Account</h3>
+            <div id="account-list" class="mb-4 text-left"></div>
+            <button class="btn btn-secondary w-full pill mt-2" onclick="app.closeManageAccounts()">Cancel</button>
+        </div>
+    </div>
+
+    <div id="logout-confirm-modal" class="modal-overlay hidden flex-center" style="position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000;">
+        <div class="glass-panel p-6 text-center" style="max-width: 350px; width: 100%;">
+            <h3 class="text-xl mb-2 text-danger">Confirm Sign Out</h3>
+            <p class="text-muted mb-6 text-sm">Your local session keys will be cleared.</p>
+            <div class="flex-between gap-4">
+                <button class="btn btn-secondary flex-1 pill" onclick="app.closeLogoutConfirm()">Cancel</button>
+                <button class="btn btn-danger flex-1 pill" onclick="app.processLogout()">Sign Out</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="verify-screen" class="page hidden flex-center">
+        <button onclick="app.goBack()" class="back-btn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Cancel
+        </button>
+        <div class="auth-card glass-panel text-center fade-in-scale">
+            <h2 class="text-2xl font-medium mb-2" id="verify-title">Verification</h2>
+            <p class="text-muted mb-8" id="verify-desc">Enter your 6-digit code.</p>
+            <div class="otp-container mb-6" id="auth-otp">
+                <input type="text" maxlength="1" class="otp-input" inputmode="numeric"><input type="text" maxlength="1" class="otp-input" inputmode="numeric"><input type="text" maxlength="1" class="otp-input" inputmode="numeric"><input type="text" maxlength="1" class="otp-input" inputmode="numeric"><input type="text" maxlength="1" class="otp-input" inputmode="numeric"><input type="text" maxlength="1" class="otp-input" inputmode="numeric">
+            </div>
+            <p id="verify-error" class="text-danger text-sm mb-6 hidden">Invalid code.</p>
+        </div>
+    </div>
+    <div id="status-screen" class="page hidden flex-center">
+        <button onclick="app.nav('landing-screen')" class="back-btn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Back
+        </button>
+        <div class="glass-panel p-8" style="max-width: 600px; width: 100%;">
+            <div class="text-center mb-8">
+                <div class="glow-check-circle mx-auto mb-4" style="width: 60px; height: 60px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                <h2 class="text-2xl font-medium text-success mb-2">All Systems Operational</h2>
+                <p class="text-muted">Encrypted networks are stable and routing normally.</p>
+            </div>
+            <div class="space-y-4">
+                <div class="flex-between border-b border-light pb-4 mb-4">
+                    <span class="font-medium text-primary">Authentication Gateway</span>
+                    <span class="text-success flex-center-row gap-2"><div class="status-dot"></div> Operational</span>
+                </div>
+                <div class="flex-between border-b border-light pb-4 mb-4">
+                    <span class="font-medium text-primary">Messaging Engine</span>
+                    <span class="text-success flex-center-row gap-2"><div class="status-dot"></div> Operational</span>
+                </div>
+                <div class="flex-between border-b border-light pb-4 mb-4">
+                    <span class="font-medium text-primary">Secure Database</span>
+                    <span class="text-success flex-center-row gap-2"><div class="status-dot"></div> Operational</span>
+                </div>
+                <div class="flex-between">
+                    <span class="font-medium text-primary">End-to-End Encryption API</span>
+                    <span class="text-success flex-center-row gap-2"><div class="status-dot"></div> Operational</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="report-abuse-screen" class="page hidden flex-center">
+        <button onclick="app.nav('landing-screen')" class="back-btn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Back
+        </button>
+        <div class="glass-panel p-8" style="max-width: 500px; width: 100%;">
+            <div id="public-abuse-form">
+                <h2 class="text-2xl font-medium mb-6">Report Abuse</h2>
+                <div class="input-group mb-4">
+                    <input type="text" class="w-full" placeholder="Subject..." readonly value="Abuse Report" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); color: var(--text-muted); padding: 1.1rem 1.25rem; font-size: 1rem; border-radius: var(--radius-sm); outline: none;">
+                </div>
+                <div class="input-group mb-4">
+                    <textarea class="w-full" rows="4" placeholder="Describe the abuse..."></textarea>
+                </div>
+                <button class="btn btn-primary w-full pill" onclick="document.getElementById('public-abuse-form').classList.add('hidden'); document.getElementById('public-abuse-success').classList.remove('hidden');">Submit Securely</button>
+            </div>
+            <div id="public-abuse-success" class="premium-success-box hidden py-10">
+                <div class="success-icon-wrapper stagger-1">
+                    <div class="pulse-ring"></div>
+                    <div class="glow-check-circle" style="margin: 0; width: 64px; height: 64px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                </div>
+                <h2 class="text-2xl font-medium mb-2 stagger-2 text-gradient-success tracking-tight">Request Submitted</h2>
+                <p class="text-muted mb-8 stagger-3">Your request has been sent successfully. Our team will review it shortly.</p>
+                <button class="btn btn-primary pill w-full stagger-4" onclick="app.nav('landing-screen')">Return Home</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="report-problem-screen" class="page hidden flex-center">
+        <button onclick="app.nav('landing-screen')" class="back-btn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Back
+        </button>
+        <div class="glass-panel p-8" style="max-width: 500px; width: 100%;">
+            <div id="public-problem-form">
+                <h2 class="text-2xl font-medium mb-6">Report a Problem</h2>
+                <div class="input-group mb-4">
+                    <input type="text" class="w-full" placeholder="Subject..." readonly value="Problem Report" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); color: var(--text-muted); padding: 1.1rem 1.25rem; font-size: 1rem; border-radius: var(--radius-sm); outline: none;">
+                </div>
+                <div class="input-group mb-4">
+                    <textarea class="w-full" rows="4" placeholder="Describe the problem..."></textarea>
+                </div>
+                <button class="btn btn-primary w-full pill" onclick="document.getElementById('public-problem-form').classList.add('hidden'); document.getElementById('public-problem-success').classList.remove('hidden');">Submit Securely</button>
+            </div>
+            <div id="public-problem-success" class="premium-success-box hidden py-10">
+                <div class="success-icon-wrapper stagger-1">
+                    <div class="pulse-ring"></div>
+                    <div class="glow-check-circle" style="margin: 0; width: 64px; height: 64px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                </div>
+                <h2 class="text-2xl font-medium mb-2 stagger-2 text-gradient-success tracking-tight">Request Submitted</h2>
+                <p class="text-muted mb-8 stagger-3">Your request has been sent successfully. Our team will review it shortly.</p>
+                <button class="btn btn-primary pill w-full stagger-4" onclick="app.nav('landing-screen')">Return Home</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="security-screen" class="page hidden flex-center">
+        <button onclick="app.nav('landing-screen')" class="back-btn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Back
+        </button>
+        <div class="glass-panel p-8" style="max-width: 500px; width: 100%;">
+            <div id="public-security-form">
+                <h2 class="text-2xl font-medium mb-6">Report a Security Issue</h2>
+                <div class="input-group mb-4">
+                    <input type="text" class="w-full" placeholder="Subject..." readonly value="Security Vulnerability" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); color: var(--text-muted); padding: 1.1rem 1.25rem; font-size: 1rem; border-radius: var(--radius-sm); outline: none;">
+                </div>
+                <div class="input-group mb-4">
+                    <textarea class="w-full" rows="4" placeholder="Detail the security issue..."></textarea>
+                </div>
+                <button class="btn btn-primary w-full pill" onclick="document.getElementById('public-security-form').classList.add('hidden'); document.getElementById('public-security-success').classList.remove('hidden');">Submit Securely</button>
+            </div>
+            <div id="public-security-success" class="premium-success-box hidden py-10">
+                <div class="success-icon-wrapper stagger-1">
+                    <div class="pulse-ring"></div>
+                    <div class="glow-check-circle" style="margin: 0; width: 64px; height: 64px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                </div>
+                <h2 class="text-2xl font-medium mb-2 stagger-2 text-gradient-success tracking-tight">Request Submitted</h2>
+                <p class="text-muted mb-8 stagger-3">Your request has been sent successfully. Our team will review it shortly.</p>
+                <button class="btn btn-primary pill w-full stagger-4" onclick="app.nav('landing-screen')">Return Home</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="feature-request-screen" class="page hidden flex-center">
+        <button onclick="app.nav('landing-screen')" class="back-btn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Back
+        </button>
+        <div class="glass-panel p-8" style="max-width: 500px; width: 100%;">
+            <div id="public-feature-form">
+                <h2 class="text-2xl font-medium mb-6">Request a Feature</h2>
+                <div class="input-group mb-4">
+                    <input type="text" class="w-full" placeholder="Subject..." readonly value="Feature Request" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); color: var(--text-muted); padding: 1.1rem 1.25rem; font-size: 1rem; border-radius: var(--radius-sm); outline: none;">
+                </div>
+                <div class="input-group mb-4">
+                    <textarea class="w-full" rows="4" placeholder="Describe the feature you want..."></textarea>
+                </div>
+                <button class="btn btn-primary w-full pill" onclick="document.getElementById('public-feature-form').classList.add('hidden'); document.getElementById('public-feature-success').classList.remove('hidden');">Submit Securely</button>
+            </div>
+            <div id="public-feature-success" class="premium-success-box hidden py-10">
+                <div class="success-icon-wrapper stagger-1">
+                    <div class="pulse-ring"></div>
+                    <div class="glow-check-circle" style="margin: 0; width: 64px; height: 64px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                </div>
+                <h2 class="text-2xl font-medium mb-2 stagger-2 text-gradient-success tracking-tight">Request Submitted</h2>
+                <p class="text-muted mb-8 stagger-3">Your request has been sent successfully. Our team will review it shortly.</p>
+                <button class="btn btn-primary pill w-full stagger-4" onclick="app.nav('landing-screen')">Return Home</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="privacy-screen" class="page hidden flex-center">
+        <button onclick="app.nav('landing-screen')" class="back-btn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Back
+        </button>
+        <div class="glass-panel p-10 text-left" style="max-width: 800px; width: 100%; max-height: 80vh; overflow-y: auto;">
+            <h2 class="text-3xl mb-8 font-medium text-center tracking-tight">Privacy Policy</h2>
+            <div class="text-muted leading-relaxed" style="font-size: 1.05rem;">
+                <h3 class="text-xl text-primary mt-8 mb-3 font-medium">1. Data Collection and Zero-Knowledge Architecture</h3>
+                <p class="mb-5">Zentro is built on the absolute principle of zero-knowledge. We do not collect, store, or process your unencrypted communication data. The only information we retain on our servers is your explicitly registered email address and your encrypted authentication keys necessary to facilitate routing.</p>
+                
+                <h3 class="text-xl text-primary mt-8 mb-3 font-medium">2. End-to-End Encryption Protocol</h3>
+                <p class="mb-5">All messages, attachments, and metadata routed through the Zentro network are encrypted locally on your device before transmission. We do not possess the decryption keys, nor do we have any technical capability to construct a backdoor to access your private communications. You hold the sole authority over your encryption keys.</p>
+                
+                <h3 class="text-xl text-primary mt-8 mb-3 font-medium">3. Third-Party Sharing and Tracking</h3>
+                <p class="mb-5">We strictly prohibit the sale, monetization, or sharing of your personal data to any third parties, advertisers, or corporate affiliates. We deploy zero tracking scripts, zero analytics pixel tracking, and no behavioral monitoring across our application interfaces.</p>
+                
+                <h3 class="text-xl text-primary mt-8 mb-3 font-medium">4. Data Retention and Deletion</h3>
+                <p class="mb-5">Deleted messages are immediately and permanently purged from our active routing servers through cryptographic overwriting. Encrypted database backups are cycled out every 30 days. Once an account is requested for deletion, all associated routing data is destroyed beyond cryptographic recovery within 72 hours.</p>
+
+                <h3 class="text-xl text-primary mt-8 mb-3 font-medium">5. Legal Compliance</h3>
+                <p class="mb-5">While Zentro operates under strict privacy laws, we must comply with legally binding, internationally recognized court orders. However, because of our zero-knowledge architecture, we cannot surrender decrypted data, as we never possess it.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="terms-screen" class="page hidden flex-center">
+        <button onclick="app.nav('landing-screen')" class="back-btn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Back
+        </button>
+        <div class="glass-panel p-10 text-left" style="max-width: 800px; width: 100%; max-height: 80vh; overflow-y: auto;">
+            <h2 class="text-3xl mb-8 font-medium text-center tracking-tight">Terms & Conditions</h2>
+            <div class="text-muted leading-relaxed" style="font-size: 1.05rem;">
+                <h3 class="text-xl text-primary mt-8 mb-3 font-medium">1. Acceptance of Terms</h3>
+                <p class="mb-5">By accessing and utilizing the Zentro secure network, you agree to be bound by these Terms & Conditions. If you do not agree with any part of these terms, you are prohibited from utilizing our communication protocols.</p>
+                
+                <h3 class="text-xl text-primary mt-8 mb-3 font-medium">2. Acceptable Use Policy</h3>
+                <p class="mb-5">The Zentro network is designed for secure, private communication. You explicitly agree NOT to use the network for the distribution of malware, illegal material, coordinated abuse, harassment, or to bypass international cybersecurity regulations. Misuse of the Zentro network will result in immediate algorithmic termination of your access nodes.</p>
+                
+                <h3 class="text-xl text-primary mt-8 mb-3 font-medium">3. Account Security Obligations</h3>
+                <p class="mb-5">You are entirely responsible for maintaining the confidentiality of your local encryption keys, passwords, and 2FA hardware/software tokens. Zentro cannot recover lost passwords or decryption keys. Loss of these credentials equates to permanent loss of access to your encrypted archives.</p>
+                
+                <h3 class="text-xl text-primary mt-8 mb-3 font-medium">4. Service Availability</h3>
+                <p class="mb-5">While we strive for 99.99% uptime, the Zentro network is provided on an "AS IS" and "AS AVAILABLE" basis. We reserve the right to perform emergency maintenance on routing nodes which may result in temporary connectivity delays.</p>
+
+                <h3 class="text-xl text-primary mt-8 mb-3 font-medium">5. Limitation of Liability</h3>
+                <p class="mb-5">In no event shall Zentro, its developers, or its server providers be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, or digital assets resulting from your use of the service.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="transparency-screen" class="page hidden flex-center">
+        <button onclick="app.nav('landing-screen')" class="back-btn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Back
+        </button>
+        <div class="glass-panel p-10 text-left" style="max-width: 800px; width: 100%; max-height: 80vh; overflow-y: auto;">
+            <h2 class="text-3xl mb-8 font-medium text-center tracking-tight">Transparency Report</h2>
+            <div class="text-muted leading-relaxed" style="font-size: 1.05rem;">
+                <h3 class="text-xl text-primary mt-8 mb-3 font-medium">Commitment to the Truth</h3>
+                <p class="mb-5">At Zentro, we believe that absolute privacy requires absolute transparency regarding our operations, our legal interactions, and the underlying integrity of our encryption systems.</p>
+                
+                <h3 class="text-xl text-primary mt-8 mb-3 font-medium">1. Zero Backdoors Policy</h3>
+                <p class="mb-5">We assert categorically that there are exactly zero intentional backdoors engineered into the Zentro communication protocol. We have never worked with any intelligence agency, domestic or foreign, to weaken our encryption algorithms, nor will we ever accept a mandate to do so.</p>
+                
+                <h3 class="text-xl text-primary mt-8 mb-3 font-medium">2. Government Data Requests</h3>
+                <p class="mb-5">Because of our zero-knowledge framework, we possess no plaintext data to hand over. In the event we receive a valid legal subpoena, the only verifiable data we can mathematically surrender includes the cryptographic hash of an account and the timestamp of creation.</p>
+                
+                <h3 class="text-xl text-primary mt-8 mb-3 font-medium">3. Incident Response Logging</h3>
+                <p class="mb-5">All security vulnerabilities patched within the Zentro core are publicly documented within 48 hours of resolution. We maintain a strict bug-bounty program to ensure independent researchers continuously audit our network for potential cryptographic degradation.</p>
+
+                <h3 class="text-xl text-primary mt-8 mb-3 font-medium">4. Warrant Canary</h3>
+                <p class="mb-5">As of the current date, Zentro has NOT received any secret warrants, national security letters, or gag orders forcing us to silently monitor our users. If this statement is ever removed from this document, assume our network has been compromised by state actors.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="ticket-screen" class="page hidden flex-center">
+        <button onclick="app.nav('landing-screen')" class="back-btn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Back
+        </button>
+        <div class="glass-panel p-8" style="max-width: 600px; width: 100%;">
+            <h2 class="text-2xl font-medium mb-4">Ticket Trace</h2>
+            <div id="ticket-loading" class="text-muted">Decrypting ticket data...</div>
+            <div id="ticket-error" class="hidden text-danger">Transmission not found or expired.</div>
+            <div id="ticket-content" class="hidden">
+                <div class="flex-between border-b border-light pb-4 mb-4">
+                    <p class="text-muted">Ticket ID: <span id="tkt-id-display" class="text-primary font-mono ml-2"></span></p>
+                    <button class="text-btn text-sm" onclick="app.copyTicketId()">Copy</button>
+                </div>
+                <p class="mb-2"><strong class="text-muted">Type:</strong> <span id="tkt-type-display" class="ml-2"></span></p>
+                <p class="mb-2"><strong class="text-muted">Logged:</strong> <span id="tkt-date-display" class="ml-2"></span></p>
+                <p class="mb-4"><strong class="text-muted">Status:</strong> <span id="tkt-badge-display" class="ml-2"></span></p>
+                <div class="p-4 border border-light rounded-sm" style="background: rgba(0,0,0,0.3); border-radius: var(--radius-sm);">
+                    <p id="tkt-desc-display" class="text-sm leading-relaxed"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
