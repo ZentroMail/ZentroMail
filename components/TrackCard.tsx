@@ -1,26 +1,33 @@
 'use client'
 
-import { Play, Heart, Plus } from 'lucide-react'
+import { Play, Pause, Heart, Plus } from 'lucide-react'
 import { usePlayerStore, type Track } from '@/lib/store'
-import { toggleLike, recordHistory, getUserPlaylists, addTrackToPlaylist } from '@/lib/actions'
+import {
+  toggleLike,
+  recordHistory,
+  getUserPlaylists,
+  addTrackToPlaylist,
+} from '@/lib/actions'
 import { useState } from 'react'
 
-export default function TrackCard({ 
-  track, 
+export default function TrackCard({
+  track,
   isLikedInitial = false,
-}: { 
-  track: Track, 
-  isLikedInitial?: boolean,
+}: {
+  track: Track
+  isLikedInitial?: boolean
 }) {
-  const { setCurrentTrack, currentTrack, isPlaying, setIsPlaying } = usePlayerStore()
+  const { setCurrentTrack, currentTrack, isPlaying, setIsPlaying } =
+    usePlayerStore()
+
   const [isLiked, setIsLiked] = useState(isLikedInitial)
   const [showPlaylists, setShowPlaylists] = useState(false)
-  const [playlists, setPlaylists] = useState<{id: string, name: string}[]>([])
+  const [playlists, setPlaylists] = useState<{ id: string; name: string }[]>([])
 
-  const isCurrentlyPlaying = currentTrack?.id === track.id
+  const isCurrent = currentTrack?.id === track.id
 
   const handlePlay = async () => {
-    if (isCurrentlyPlaying) {
+    if (isCurrent) {
       setIsPlaying(!isPlaying)
     } else {
       setCurrentTrack(track)
@@ -41,66 +48,98 @@ export default function TrackCard({
     setShowPlaylists(true)
   }
 
-  const handleAddToPlaylist = async (e: React.MouseEvent, pId: string) => {
+  const handleAdd = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
-    await addTrackToPlaylist(pId, track.id)
+    await addTrackToPlaylist(id, track.id)
     setShowPlaylists(false)
   }
 
   return (
-    <div className="group flex items-center bg-white/5 hover:bg-white/10 rounded-md p-2 transition-colors cursor-pointer relative w-full">
-      <div onClick={handlePlay} className="flex flex-1 items-center gap-4 overflow-hidden">
-        <div className="relative">
-          <img src={track.coverUrl} alt={track.title} className="w-12 h-12 md:w-16 md:h-16 object-cover rounded shadow-md" loading="lazy" />
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <Play className="w-6 h-6 text-white fill-current ml-1" />
+    <div className="group relative flex items-center justify-between gap-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all p-3 md:p-4 border border-white/5">
+      <div
+        onClick={handlePlay}
+        className="flex items-center gap-4 flex-1 cursor-pointer min-w-0"
+      >
+        <div className="relative shrink-0">
+          <img
+            src={track.coverUrl}
+            alt={track.title}
+            className="w-14 h-14 md:w-16 md:h-16 rounded-lg object-cover"
+          />
+
+          <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+            {isCurrent && isPlaying ? (
+              <Pause className="w-5 h-5 text-white fill-current" />
+            ) : (
+              <Play className="w-5 h-5 text-white fill-current ml-0.5" />
+            )}
           </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <h4 className={`font-bold truncate ${isCurrentlyPlaying ? 'text-coral-500' : 'text-white'}`}>
+
+        <div className="min-w-0">
+          <h3
+            className={`font-semibold truncate ${
+              isCurrent ? 'text-pink-400' : 'text-white'
+            }`}
+          >
             {track.title}
-          </h4>
+          </h3>
+
           <p className="text-sm text-gray-400 truncate">{track.artist}</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 md:gap-4 ml-4">
-        <button onClick={handleLike} className="p-2 hover:scale-110 transition-transform">
-          <Heart className={`w-5 h-5 ${isLiked ? 'text-coral-500 fill-current' : 'text-gray-400 hover:text-white'}`} />
+      <div className="flex items-center gap-2 relative">
+        <button
+          onClick={handleLike}
+          className="p-2 rounded-full hover:bg-white/10"
+        >
+          <Heart
+            className={`w-5 h-5 ${
+              isLiked
+                ? 'text-pink-400 fill-current'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          />
         </button>
-        
-        <div className="relative">
-          <button onClick={handleShowPlaylists} className="p-2 hover:scale-110 transition-transform text-gray-400 hover:text-white">
-            <Plus className="w-5 h-5" />
-          </button>
-          
-          {showPlaylists && (
-            <div className="absolute right-0 top-full mt-2 w-48 bg-[#282828] border border-white/10 rounded-md shadow-xl z-50 py-2">
-              <div className="px-3 py-1 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-white/10 mb-1">
-                Add to Playlist
-              </div>
-              {playlists.length === 0 ? (
-                <div className="px-4 py-2 text-sm text-gray-400">No playlists yet</div>
-              ) : (
-                playlists.map(p => (
-                  <button 
-                    key={p.id}
-                    onClick={(e) => handleAddToPlaylist(e, p.id)}
-                    className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 truncate"
-                  >
-                    {p.name}
-                  </button>
-                ))
-              )}
-              <div 
-                className="px-4 py-2 text-sm text-coral-500 hover:bg-white/10 cursor-pointer border-t border-white/10 mt-1"
-                onClick={(e) => { e.stopPropagation(); setShowPlaylists(false) }}
-              >
-                Cancel
-              </div>
+
+        <button
+          onClick={handleShowPlaylists}
+          className="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white"
+        >
+          <Plus className="w-5 h-5" />
+        </button>
+
+        {showPlaylists && (
+          <div className="absolute right-0 top-full mt-2 w-52 bg-[#181818] border border-white/10 rounded-xl shadow-xl z-50 py-2">
+            <div className="px-4 pb-2 text-xs uppercase text-gray-400 font-semibold">
+              Add to Playlist
             </div>
-          )}
-        </div>
+
+            {playlists.length === 0 ? (
+              <div className="px-4 py-2 text-sm text-gray-400">
+                No playlists yet
+              </div>
+            ) : (
+              playlists.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={(e) => handleAdd(e, p.id)}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-white/10 text-white truncate"
+                >
+                  {p.name}
+                </button>
+              ))
+            )}
+
+            <button
+              onClick={() => setShowPlaylists(false)}
+              className="w-full text-left px-4 py-2 text-sm text-pink-400 hover:bg-white/10 mt-1"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
