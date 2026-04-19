@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String     @id
+  email         String     @unique
+  name          String?
+  createdAt     DateTime   @default(now())
+  
+  playlists     Playlist[]
+  likedTracks   Track[]    @relation("LikedTracks")
+  history       History[]
+}
+
+model Track {
+  id          String     @id @default(uuid())
+  title       String
+  artist      String
+  coverUrl    String
+  audioUrl    String
+  duration    String
+  
+  playlists   Playlist[] @relation("PlaylistToTrack")
+  likedBy     User[]     @relation("LikedTracks")
+  history     History[]
+}
+
+model Playlist {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tracks    Track[]  @relation("PlaylistToTrack")
+  createdAt DateTime @default(now())
+}
+
+model History {
+  id        String   @id @default(uuid())
+  userId    String
+  trackId   String
+  playedAt  DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track     Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@index([userId, playedAt])
+}
