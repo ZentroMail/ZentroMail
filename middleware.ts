@@ -14,11 +14,22 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+
+        setAll(
+          cookiesToSet: {
+            name: string
+            value: string
+            options?: any
+          }[]
+        ) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          )
+
           supabaseResponse = NextResponse.next({
             request: { headers: request.headers },
           })
+
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )
@@ -27,13 +38,15 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  const isProtectedRoute = 
-    request.nextUrl.pathname.startsWith('/library') || 
+  const isProtectedRoute =
+    request.nextUrl.pathname.startsWith('/library') ||
     request.nextUrl.pathname.startsWith('/liked') ||
     request.nextUrl.pathname.startsWith('/history') ||
-    request.nextUrl.pathname.startsWith('/playlists');
+    request.nextUrl.pathname.startsWith('/playlists')
 
   if (isProtectedRoute && !user) {
     return NextResponse.redirect(new URL('/login', request.url))
@@ -43,5 +56,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }
