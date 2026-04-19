@@ -1,40 +1,62 @@
-import prisma from '@/lib/prisma';
-import TrackCard from '@/components/TrackCard';
-import { createClient } from '@/utils/supabase/server';
+import prisma from '@/lib/prisma'
+import TrackCard from '@/components/TrackCard'
+import { createClient } from '@/utils/supabase/server'
 
 export default async function Home() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  const tracks = await prisma.track.findMany({ take: 20 });
-  
-  let likedTrackIds = new Set<string>();
+  const tracks = await prisma.track.findMany({ take: 20 })
+
+  let likedTrackIds = new Set<string>()
+
   if (user) {
     const userData = await prisma.user.findUnique({
       where: { id: user.id },
-      include: { likedTracks: { select: { id: true } } }
-    });
-    likedTrackIds = new Set(userData?.likedTracks.map(t => t.id) || []);
+      include: {
+        likedTracks: {
+          select: { id: true },
+        },
+      },
+    })
+
+    likedTrackIds = new Set(userData?.likedTracks.map((t) => t.id) || [])
   }
 
   return (
-    <div className="p-4 md:p-8 bg-gradient-to-b from-violet-900/40 to-[#121212] min-h-screen">
-      <header className="flex justify-between items-center mb-8 pt-6 md:pt-0">
-        <h2 className="text-3xl font-bold text-white">Discover</h2>
-      </header>
+    <main className="min-h-screen bg-gradient-to-b from-violet-900/40 via-[#121212] to-black text-white p-5 md:p-8 lg:ml-64 pb-28">
+      <section className="mb-10 rounded-2xl bg-gradient-to-r from-violet-600 to-pink-500 p-8 shadow-xl">
+        <p className="text-sm uppercase tracking-widest text-white/80 mb-2">
+          Welcome to EMUSIC
+        </p>
 
-      <section className="mb-12">
-        <h3 className="text-xl font-bold text-white mb-6">Trending Now</h3>
-        <div className="flex flex-col gap-2 max-w-4xl">
+        <h1 className="text-4xl md:text-5xl font-bold mb-3">
+          Discover your next favorite song
+        </h1>
+
+        <p className="text-white/80 max-w-xl">
+          Stream trending tracks, build playlists, and enjoy music anywhere.
+        </p>
+      </section>
+
+      <section>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-2xl font-bold">Trending Now</h2>
+          <span className="text-sm text-gray-400">{tracks.length} tracks</span>
+        </div>
+
+        <div className="space-y-3 max-w-5xl">
           {tracks.map((track) => (
-            <TrackCard 
-              key={track.id} 
-              track={track} 
+            <TrackCard
+              key={track.id}
+              track={track}
               isLikedInitial={likedTrackIds.has(track.id)}
             />
           ))}
         </div>
       </section>
-    </div>
-  );
+    </main>
+  )
 }
