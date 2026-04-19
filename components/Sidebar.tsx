@@ -32,40 +32,64 @@ export default function Sidebar() {
   ]
 
   return (
-    <div className="hidden md:flex w-64 bg-black h-screen fixed left-0 top-0 text-gray-300 p-6 flex-col border-r border-white/10 z-40">
+    <aside className="hidden lg:flex w-64 bg-black h-screen fixed left-0 top-0 text-gray-300 p-6 flex-col border-r border-white/10 z-40">
       <div className="mb-10 flex items-center gap-2">
-        <div className="w-8 h-8 bg-gradient-to-tr from-coral-500 to-violet-600 rounded-full flex items-center justify-center">
+        <div className="w-8 h-8 bg-gradient-to-tr from-pink-500 to-violet-600 rounded-full flex items-center justify-center">
           <span className="text-white font-bold text-xl">E</span>
         </div>
-        <h1 className="text-white font-bold text-2xl tracking-tight">EMUSIC</h1>
+        <h1 className="text-white font-bold text-2xl tracking-tight">
+          EMUSIC
+        </h1>
       </div>
 
       <nav className="flex flex-col gap-5 mb-10">
         {navLinks.map((link) => (
-          <Link 
-            key={link.href} 
-            href={link.href} 
-            className={`flex items-center gap-4 transition-colors font-semibold ${pathname === link.href ? 'text-white' : 'hover:text-white'}`}
+          <Link
+            key={link.href}
+            href={link.href}
+            className={`flex items-center gap-4 font-semibold transition-colors ${
+              pathname === link.href
+                ? 'text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
           >
-            <link.icon className="w-6 h-6" /> {link.label}
+            <link.icon className="w-6 h-6" />
+            <span>{link.label}</span>
           </Link>
         ))}
       </nav>
 
       <div className="flex flex-col gap-4 mt-4 mb-auto">
-        <button onClick={handleCreatePlaylist} className="flex items-center gap-4 hover:text-white transition-colors font-semibold">
-          <PlusCircle className="w-6 h-6" /> Create Playlist
+        <button
+          onClick={handleCreatePlaylist}
+          className="flex items-center gap-4 text-gray-400 hover:text-white transition-colors font-semibold text-left"
+        >
+          <PlusCircle className="w-6 h-6" />
+          <span>Create Playlist</span>
         </button>
-        <Link href="/liked" className={`flex items-center gap-4 transition-colors font-semibold ${pathname === '/liked' ? 'text-white' : 'hover:text-white'}`}>
-          <Heart className="w-6 h-6 text-coral-500" /> Liked Songs
+
+        <Link
+          href="/liked"
+          className={`flex items-center gap-4 font-semibold transition-colors ${
+            pathname === '/liked'
+              ? 'text-white'
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          <Heart className="w-6 h-6 text-pink-500" />
+          <span>Liked Songs</span>
         </Link>
       </div>
 
-      <div className="border-t border-white/10 pt-6 mt-6 flex flex-col gap-4">
-        <button onClick={handleLogout} className="flex items-center gap-4 text-gray-400 hover:text-white transition-colors text-sm font-semibold">
-          <LogOut className="w-5 h-5" /> Log Out
+      <div className="border-t border-white/10 pt-6 mt-6">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-4 text-gray-400 hover:text-white transition-colors text-sm font-semibold"
+        >
+          <LogOut className="w-5 h-5" />
+          <span>Log Out</span>
         </button>
       </div>
-    </div>
+    </aside>
   )
 }
